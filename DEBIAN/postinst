@@ -3,3 +3,5 @@
 chmod a+x /etc/init.d/oakvnc
 chmod u=rw,go-rwx /etc/oakvnc.conf
 chmod a+x /usr/sbin/oakpasswd
+
+update-rc.d oakvnc defaults
