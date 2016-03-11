@@ -1,0 +1,9 @@
+#!/usr/bin/expect
+set timeout 5
+set password [lindex $argv 0]
+
+spawn vncpasswd
+expect "*?assword:*"
+send "$password\r"
+expect "*?erify:*"
+send "$password\r"

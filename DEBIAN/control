@@ -1,0 +1,8 @@
+Package: oakvnc
+Version: 1.0.1
+Section: x11
+Priority: optional
+Architecture: all
+Depends: expect, vnc4server
+Maintainer: Behrad Eslamifar <b.eslamifar@cvak.ir>
+Description: Oakvnc is bunch of scripts for easy to use vncserver

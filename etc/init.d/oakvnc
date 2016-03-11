@@ -1,0 +1,111 @@
+#!/bin/bash 
+
+### BEGIN INIT INFO
+# Provides:             oakvnc
+# Required-Start:       $all
+# Required-Stop:        $all
+# Default-Start:        2 3 4 5
+# Default-Stop:		0 1 6
+# Short-Description:    oak vnc is bunch of scripts for easy to use vncserver
+### END INIT INFO
+
+set -e
+
+CONFFILE=/etc/oakvnc.conf
+
+[ -x /usr/bin/expect ] || ( echo -e "Dependency check: missing \"expect\" package \n" && exit 1 )
+[ -x /usr/bin/vnc4server ] || ( echo -e "vnc4server is not install or not excutable. Please check installation and permissions \n" && exit 1 )
+
+cfg_parser () {
+	grep -v "^#" $CONFFILE  | tr '\t' ' ' | tr -s ' ' | \
+	while read 
+	do
+		if [ "$REPLY" = "" ]
+		then
+			echo "Configure a user"
+			exit 0
+		fi
+		USER_CONF=($REPLY)
+
+		if [ ${#USER_CONF[*]} -ne 5 ]
+		then
+			echo "${USER_CONF[*]} has error"
+			echo "You miss some part of config. Please write all config parameter correctly"
+		elif [ -z $(grep -o "^\<${USER_CONF[0]}\>" /etc/passwd) ]
+		then
+			echo "ERROR: This line of config \"${USER_CONF[*]}\" has an error"
+			echo "ERROR: The \"${USER_CONF[0]}\" user does not exist"
+			exit 1
+		elif [ ${USER_CONF[1]} -lt 2 ]
+		then
+			echo "ERROR: This line of config \"${USER_CONF[*]}\" has an error"
+			echo "ERROR: Session number is ${USER_CONF[1]}. You must choose biger than 2"
+			exit 1
+		elif [ -z $(echo ${USER_CONF[2]} | grep "[0-9]\{3,4\}x[0-9]\{3,4\}") ]
+		then
+			echo "ERROR: This line of config \"${USER_CONF[*]}\" has an error"
+			echo "ERROR: Gemoetry is in incorrect format"
+			exit 1
+		elif [ -z $(echo ${USER_CONF[3]} | grep -o "^\(\<8\>\|\<15\>\|\<16\>\|\<24\>\)$") ]
+		then
+			echo "ERROR: This line of config \"${USER_CONF[*]}\" has an error"
+			echo "ERROR: You must change \"${USER_CONF[3]}\" to valid number: 8,15,16,24"
+			exit 1
+		elif [ -z $(echo ${USER_CONF[4]} | grep -o "^[0-9a-zA-Z]\{6,\}$") ]
+		then
+			echo "ERROR: This line of config \"${USER_CONF[*]}\" has an error"
+			echo "ERROR: Please use more than 6 numbers and alphabet characters for password"
+			exit 1
+		fi
+	
+	done
+}
+
+cfg_password () {
+        grep -v "^#" $CONFFILE  | tr '\t' ' ' | tr -s ' ' | \
+        while read
+        do
+                USER_CONF=($REPLY)
+                su - ${USER_CONF[0]} -c "oakasswd ${USER_CONF[4]}" 2>&1 >/dev/null
+	done
+        
+}
+
+start () {
+        grep -v "^#" $CONFFILE  | tr '\t' ' ' | tr -s ' ' | \
+        while read
+        do
+		USER_CONF=($REPLY)
+		su - ${USER_CONF[0]} -c "vnc4server :${USER_CONF[1]} -geometry ${USER_CONF[2]} -depth ${USER_CONF[3]}"
+	done
+}
+
+stop () {
+        grep -v "^#" $CONFFILE  | tr '\t' ' ' | tr -s ' ' | \
+        while read
+        do
+		USER_CONF=($REPLY)
+                su - ${USER_CONF[0]} -c "vnc4server -kill :${USER_CONF[1]}"
+        done
+
+}
+
+status () {
+	echo "User	PID	Session no."
+	ps aux  | grep "Xvnc4" | grep -v grep | tr -s ' ' | cut -d " " -f 2,1,12 | tr ' ' '\t'
+}
+
+case  "$1" in
+	start) cfg_parser; cfg_password; start
+	;;
+	stop) stop
+	;;
+	restart) stop; start
+	;;
+	parse) cfg_parser 
+	;;
+	status) status
+	;;
+esac
+
+exit 0
