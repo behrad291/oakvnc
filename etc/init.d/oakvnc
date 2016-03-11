@@ -66,7 +66,7 @@ cfg_password () {
         while read
         do
                 USER_CONF=($REPLY)
-                su - ${USER_CONF[0]} -c "oakasswd ${USER_CONF[4]}" 2>&1 >/dev/null
+                su - ${USER_CONF[0]} -c "oakpasswd ${USER_CONF[4]}" 2>&1 >/dev/null
 	done
         
 }
