@@ -1,2 +1,15 @@
-Author: Behrad Eslamifar
+# Description
 Oak is bunch of scripts to work easier with vncserver
+
+# Author 
+Behrad Eslamifar <b.eslamifar@cvak.ir>
+
+# configuration
+configuration file: /etc/oakvnc.conf
+
+# Test plan
+These script only test on Debian Jessie with Mate desktop enviroment. If you test with other desktop and distro. please report me bug and successful install
+
+# known bug
+- Parser function dont have session validation
+- Stop function only kill current config file and cant detect all vncserver session
