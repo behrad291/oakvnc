@@ -17,7 +17,7 @@ CONFFILE=/etc/oakvnc.conf
 [ -x /usr/bin/vnc4server ] || ( echo -e "vnc4server is not install or not excutable. Please check installation and permissions \n" && exit 1 )
 
 cfg_parser () {
-	grep -v "^#" $CONFFILE  | tr '\t' ' ' | tr -s ' ' | \
+	grep -v "^#\|^$" $CONFFILE  | tr '\t' ' ' | tr -s ' ' | \
 	while read 
 	do
 		if [ "$REPLY" = "" ]
@@ -62,17 +62,17 @@ cfg_parser () {
 }
 
 cfg_password () {
-        grep -v "^#" $CONFFILE  | tr '\t' ' ' | tr -s ' ' | \
+        grep -v "^#\|^$" $CONFFILE  | tr '\t' ' ' | tr -s ' ' | \
         while read
         do
                 USER_CONF=($REPLY)
-                su - ${USER_CONF[0]} -c "oakpasswd ${USER_CONF[4]}" 2>&1 >/dev/null
+                su - ${USER_CONF[0]} -c "/usr/sbin/oakpasswd ${USER_CONF[4]}" 2>&1 >/dev/null
 	done
         
 }
 
 start () {
-        grep -v "^#" $CONFFILE  | tr '\t' ' ' | tr -s ' ' | \
+        grep -v "^#\|^$" $CONFFILE  | tr '\t' ' ' | tr -s ' ' | \
         while read
         do
 		USER_CONF=($REPLY)
@@ -81,7 +81,7 @@ start () {
 }
 
 stop () {
-        grep -v "^#" $CONFFILE  | tr '\t' ' ' | tr -s ' ' | \
+        grep -v "^#\|^$" $CONFFILE  | tr '\t' ' ' | tr -s ' ' | \
         while read
         do
 		USER_CONF=($REPLY)
@@ -90,9 +90,19 @@ stop () {
 
 }
 
-status () {
+stop-all () {
+	ps aux  | grep "[X]vnc4" | tr -s ' ' | cut -d " " -f 1,12 | \
+	while read
+	do
+		USER_SESSION=($REPLY)
+                su - ${USER_SESSION[0]} -c "vnc4server -kill ${USER_SESSION[1]}"
+	done
+}
+
+list_session () {
 	echo "User	PID	Session no."
-	ps aux  | grep "Xvnc4" | grep -v grep | tr -s ' ' | cut -d " " -f 2,1,12 | tr ' ' '\t'
+	ps aux  | grep "[X]vnc4" | tr -s ' ' | cut -d " " -f 2,1,12 | tr ' ' '\t'
+	exit 0
 }
 
 case  "$1" in
@@ -104,7 +114,11 @@ case  "$1" in
 	;;
 	parse) cfg_parser 
 	;;
-	status) status
+	list) list_session
+	;;
+	stop-all) stop-all
+	;;
+	*) echo "Usage: oakvnc {start|stop|restart|parse|status|list|stop-all}"
 	;;
 esac
 
