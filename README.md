@@ -34,7 +34,7 @@ Resolved bugs
 
 Change log
 ---------------
-* Version 1.2.0
+*Version 1.2.0*
 - Add list option
 - Add stop-all option
 - Resolved two bugs (ubuntu and kill function)
